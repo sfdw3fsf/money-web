@@ -55,7 +55,7 @@ export function useBinanceSocket({
   const wsRef = useRef<WebSocket | null>(null);
   const candlesRef = useRef<Candle[]>([]);
   const onCandleCloseRef = useRef(onCandleClose);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const reconnectTimeoutRef = useRef<any>(null);
   const reconnectAttemptsRef = useRef(0);
 
   // Keep callback ref fresh

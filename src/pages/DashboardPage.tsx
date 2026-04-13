@@ -1,31 +1,33 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useBinanceSocket } from '../hooks/useBinanceSocket';
 import { useAIAnalysis } from '../hooks/useClaudeAnalysis';
 import { useSignalHistory } from '../hooks/useSignalHistory';
-import { sendTelegramSignal } from '../services/telegramService';
+import { sendTelegramSignal, type TelegramSignalData } from '../services/telegramService';
+import { updateOutcome } from '../utils/signalJournal';
 import CandleChart from '../components/CandleChart';
 import SignalPanel from '../components/SignalPanel';
 import PnLTracker from '../components/PnLTracker';
 import SignalHistory from '../components/SignalHistory';
 import AlertSettings from '../components/AlertSettings';
 import ConnectionStatus from '../components/ConnectionStatus';
-import { AVAILABLE_PAIRS } from '../config/constants';
+import { AVAILABLE_PAIRS, TREND_INTERVAL, TREND_CANDLE_COUNT } from '../config/constants';
 
 export default function DashboardPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const journalUpdatedIdsRef = useRef<Set<string>>(new Set());
 
-  const { signals, config, pnlStats, addSignal, followSignal, skipSignal, closeSignal, checkPriceTargets, clearHistory, updateConfig } =
+  const { signals, config, pnlStats, addSignal, followSignal, unfollowSignal, skipSignal, closeSignal, checkPriceTargets, clearHistory, updateConfig } =
     useSignalHistory();
 
   const handleNewSignal = useCallback(
     (signal: import('../types/trading').Signal) => {
       addSignal(signal);
     },
-    [addSignal]
+    [addSignal],
   );
 
-  const { activeSignal, isAnalyzing, lastError, analyze } = useAIAnalysis({
+  const { activeSignal, isAnalyzing, lastError, lastFilterReason, indicators, analyze } = useAIAnalysis({
     pair: config.pair,
     interval: config.interval,
     aiApiKey: config.aiApiKey,
@@ -35,13 +37,28 @@ export default function DashboardPage() {
     onNewSignal: handleNewSignal,
   });
 
+  // UPGRADE 2: 15m socket for higher timeframe trend
+  const candles15mRef = useRef<import('../types/trading').Candle[]>([]);
+
+  const { candles: candles15m } = useBinanceSocket({
+    pair: config.pair,
+    interval: TREND_INTERVAL,
+    candleCount: TREND_CANDLE_COUNT,
+  });
+
+  // Keep 15m candles ref updated
+  useEffect(() => {
+    candles15mRef.current = candles15m;
+  }, [candles15m]);
+
+  // Original 5m candle close handler — now passes BOTH timeframes
   const handleCandleClose = useCallback(
-    (candles: import('../types/trading').Candle[]) => {
+    (candles5m: import('../types/trading').Candle[]) => {
       if (config.aiApiKey) {
-        analyze(candles);
+        analyze(candles5m, candles15mRef.current);
       }
     },
-    [config.aiApiKey, analyze]
+    [config.aiApiKey, analyze],
   );
 
   const { candles, currentPrice, priceChange24h, connectionState, reconnect } = useBinanceSocket({
@@ -53,57 +70,76 @@ export default function DashboardPage() {
 
   const handleManualAnalyze = () => {
     if (candles.length > 0) {
-      analyze(candles);
+      analyze(candles, candles15mRef.current);
     }
   };
 
   const handleSendTelegram = async () => {
-    if (activeSignal && config.telegramBotToken && config.telegramChatId) {
-      await sendTelegramSignal(config.telegramBotToken, config.telegramChatId, activeSignal);
+    if (activeSignal && config.telegramBotToken && config.telegramChatId && indicators) {
+      const reward = Math.abs(activeSignal.takeProfit - activeSignal.entry);
+      const risk = Math.abs(activeSignal.entry - activeSignal.stopLoss);
+      const rrRatio = risk > 0 ? reward / risk : 0;
+
+      const telegramData: TelegramSignalData = {
+        signal: activeSignal,
+        indicators,
+        rrRatio,
+      };
+      await sendTelegramSignal(config.telegramBotToken, config.telegramChatId, telegramData);
     }
   };
 
-  // Auto-track: check if followed signals hit TP or SL
+  // UPGRADE 6: Auto-track TP/SL hits and update journal
   useEffect(() => {
     if (currentPrice > 0) {
       checkPriceTargets(currentPrice);
-    }
-  }, [currentPrice, checkPriceTargets]);
 
+      // Check signals for journal outcome updates
+      for (const sig of signals) {
+        if (sig.status === 'tp_hit' && sig.closedAt && !journalUpdatedIdsRef.current.has(sig.id)) {
+          updateOutcome(sig.id, 'TP_HIT', sig.closePrice ?? sig.takeProfit);
+          journalUpdatedIdsRef.current.add(sig.id);
+        }
+        if (sig.status === 'sl_hit' && sig.closedAt && !journalUpdatedIdsRef.current.has(sig.id)) {
+          updateOutcome(sig.id, 'SL_HIT', sig.closePrice ?? sig.stopLoss);
+          journalUpdatedIdsRef.current.add(sig.id);
+        }
+      }
+    }
+  }, [currentPrice, checkPriceTargets, signals]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div className="min-h-screen bg-[#1a1510]">
       {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/[0.06]">
+      <header className="sticky top-0 z-40 bg-[#1a1510]/90 backdrop-blur-xl border-b border-[#c4956a]/10">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           {/* Left: Logo + Pair info */}
           <div className="flex items-center gap-4 sm:gap-6">
             <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#c4956a] to-[#8b7355] flex items-center justify-center shadow-lg shadow-[#c4956a]/15 border border-[#c4956a]/30">
+                <span className="text-sm">🌾</span>
               </div>
-              <span className="text-sm font-bold text-white hidden sm:inline">
-                Money<span className="gradient-text">Web</span>
+              <span className="text-sm font-bold text-[#e8dcc8] hidden sm:inline" style={{ fontFamily: "'Playfair Display', serif" }}>
+                The Old <span className="gradient-text">Post</span>
               </span>
             </Link>
 
-            <div className="h-6 w-px bg-white/[0.08] hidden sm:block" />
+            <div className="h-6 w-px bg-[#c4956a]/10 hidden sm:block" />
 
             <ConnectionStatus state={connectionState} pair={config.pair} onReconnect={reconnect} />
 
             {/* Price info */}
             <div className="hidden sm:flex items-center gap-3">
-              <span className="text-lg font-bold text-white tabular-nums">
+              <span className="text-lg font-bold text-[#e8dcc8] tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                 ${currentPrice.toFixed(currentPrice > 100 ? 2 : 4)}
               </span>
               <span
                 className={`text-xs font-semibold px-2 py-0.5 rounded-md tabular-nums ${
                   priceChange24h >= 0
-                    ? 'bg-emerald-500/10 text-emerald-400'
-                    : 'bg-red-500/10 text-red-400'
+                    ? 'bg-[#7d9b6f]/10 text-[#7d9b6f]'
+                    : 'bg-[#b5594e]/10 text-[#b5594e]'
                 }`}
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
                 {priceChange24h >= 0 ? '+' : ''}{priceChange24h.toFixed(2)}%
               </span>
@@ -116,26 +152,28 @@ export default function DashboardPage() {
             <select
               value={config.pair}
               onChange={(e) => updateConfig({ pair: e.target.value })}
-              className="px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.06] text-white text-xs font-medium outline-none focus:border-indigo-500/30 transition-colors appearance-none cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#c4956a]/[0.06] border border-[#c4956a]/10 text-[#e8dcc8] text-xs font-medium outline-none focus:border-[#c4956a]/20 transition-colors appearance-none cursor-pointer"
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
               {AVAILABLE_PAIRS.map((p) => (
-                <option key={p.value} value={p.value} className="bg-[#12121a]">
+                <option key={p.value} value={p.value} className="bg-[#231f18]">
                   {p.label}
                 </option>
               ))}
             </select>
 
             {/* Interval quick selector */}
-            <div className="hidden md:flex items-center gap-1 px-1 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+            <div className="hidden md:flex items-center gap-1 px-1 py-1 rounded-lg bg-[#c4956a]/[0.04] border border-[#c4956a]/8">
               {['1m', '5m', '15m', '1h', '4h'].map((interval) => (
                 <button
                   key={interval}
                   onClick={() => updateConfig({ interval })}
                   className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
                     config.interval === interval
-                      ? 'bg-indigo-500/20 text-indigo-400'
-                      : 'text-[#5a5a6e] hover:text-white'
+                      ? 'bg-[#c4956a]/20 text-[#c4956a]'
+                      : 'text-[#6d6354] hover:text-[#e8dcc8]'
                   }`}
+                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
                 >
                   {interval}
                 </button>
@@ -145,17 +183,73 @@ export default function DashboardPage() {
             {/* Settings button */}
             <button
               onClick={() => setSettingsOpen(true)}
-              className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/[0.04] border border-white/[0.06] text-[#8b8b9e] hover:text-white hover:border-white/[0.12] transition-all"
-              title="Settings"
+              className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#c4956a]/[0.06] border border-[#c4956a]/10 text-[#a0947e] hover:text-[#e8dcc8] hover:border-[#c4956a]/20 transition-all"
+              title="Post Office Settings"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87a6.714 6.714 0 011.6.923c.294.222.663.291 1.018.2l1.238-.343c.523-.145 1.076.109 1.351.58l1.296 2.247a1.125 1.125 0 01-.286 1.44l-1.025.938a1.183 1.183 0 00-.364.955c.01.353.01.706 0 1.059a1.18 1.18 0 00.364.955l1.025.938a1.125 1.125 0 01.286 1.44l-1.296 2.247a1.125 1.125 0 01-1.35.58l-1.239-.344a1.21 1.21 0 00-1.018.2 6.71 6.71 0 01-1.6.924 1.18 1.18 0 00-.645.869l-.213 1.281c-.09.543-.56.941-1.11.941h-2.593c-.55 0-1.02-.398-1.11-.94l-.213-1.281a1.18 1.18 0 00-.645-.87 6.71 6.71 0 01-1.6-.923 1.21 1.21 0 00-1.018-.2l-1.238.343a1.125 1.125 0 01-1.351-.58L3.196 16.14a1.125 1.125 0 01.286-1.44l1.025-.938a1.18 1.18 0 00.364-.955 8.26 8.26 0 010-1.059 1.18 1.18 0 00-.364-.955L3.48 9.855a1.125 1.125 0 01-.286-1.44l1.296-2.247a1.125 1.125 0 011.35-.58l1.239.344c.355.09.724.022 1.018-.2a6.71 6.71 0 011.6-.924 1.18 1.18 0 00.645-.869l.213-1.281z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              ⚙
             </button>
           </div>
         </div>
       </header>
+
+      {/* Filter Status Bar */}
+      {(lastFilterReason || indicators) && (
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 pt-3">
+          <div className="flex items-center gap-3 flex-wrap text-xs">
+            {/* Filter status */}
+            {lastFilterReason && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#c4956a]/10 border border-[#c4956a]/15">
+                <span className="text-[#c4956a]">🛡️ Filtered:</span>
+                <span className="text-[#dab896]" style={{ fontFamily: "'Lora', serif" }}>{lastFilterReason}</span>
+              </div>
+            )}
+
+            {/* Indicator pills */}
+            {indicators && (
+              <>
+                <div className={`px-2.5 py-1 rounded-lg border ${
+                  indicators.trend15m === 'bullish'
+                    ? 'bg-[#7d9b6f]/10 border-[#7d9b6f]/20 text-[#7d9b6f]'
+                    : indicators.trend15m === 'bearish'
+                      ? 'bg-[#b5594e]/10 border-[#b5594e]/20 text-[#b5594e]'
+                      : 'bg-[#c4956a]/[0.05] border-[#c4956a]/10 text-[#a0947e]'
+                }`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  15m: {indicators.trend15m}
+                </div>
+                <div className={`px-2.5 py-1 rounded-lg border ${
+                  indicators.trend5m === 'bullish'
+                    ? 'bg-[#7d9b6f]/10 border-[#7d9b6f]/20 text-[#7d9b6f]'
+                    : indicators.trend5m === 'bearish'
+                      ? 'bg-[#b5594e]/10 border-[#b5594e]/20 text-[#b5594e]'
+                      : 'bg-[#c4956a]/[0.05] border-[#c4956a]/10 text-[#a0947e]'
+                }`} style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  5m: {indicators.trend5m}
+                </div>
+                <div className={`px-2.5 py-1 rounded-lg border ${
+                  indicators.timeframeAligned
+                    ? 'bg-[#7d9b6f]/10 border-[#7d9b6f]/20 text-[#7d9b6f]'
+                    : 'bg-[#b5594e]/10 border-[#b5594e]/20 text-[#b5594e]'
+                }`} style={{ fontFamily: "'Lora', serif" }}>
+                  {indicators.timeframeAligned ? '✓ Aligned' : '✗ Misaligned'}
+                </div>
+                <div className="px-2.5 py-1 rounded-lg bg-[#c4956a]/[0.05] border border-[#c4956a]/10 text-[#a0947e]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  RSI: {indicators.rsi14.toFixed(0)}
+                </div>
+                <div className={`px-2.5 py-1 rounded-lg border ${
+                  indicators.isSideways
+                    ? 'bg-[#c4956a]/10 border-[#c4956a]/20 text-[#c4956a]'
+                    : 'bg-[#c4956a]/[0.05] border-[#c4956a]/10 text-[#a0947e]'
+                }`} style={{ fontFamily: "'Lora', serif" }}>
+                  {indicators.isSideways ? '⚠ Flat fields' : `Range: ${indicators.sidewaysRange.toFixed(2)}%`}
+                </div>
+                <div className="px-2.5 py-1 rounded-lg bg-[#c4956a]/[0.05] border border-[#c4956a]/10 text-[#a0947e]" style={{ fontFamily: "'Lora', serif" }}>
+                  Vol: {indicators.volumeTrend === 'above_average' ? '📈' : '📉'} {indicators.volumeTrend.replace('_', ' ')}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* P&L Bar */}
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 pt-4">
@@ -179,29 +273,31 @@ export default function DashboardPage() {
               onManualAnalyze={handleManualAnalyze}
               onSendTelegram={handleSendTelegram}
             />
-
-            <SignalHistory
-              signals={signals}
-              currentPrice={currentPrice}
-              onFollow={followSignal}
-              onSkip={skipSignal}
-              onClose={closeSignal}
-            />
           </div>
         </div>
       </main>
 
+      {/* Floating Signal Ledger — draggable anywhere on page */}
+      <SignalHistory
+        signals={signals}
+        currentPrice={currentPrice}
+        onFollow={followSignal}
+        onUnfollow={unfollowSignal}
+        onSkip={skipSignal}
+        onClose={closeSignal}
+      />
+
       {/* API key warning banner */}
       {!config.aiApiKey && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30">
-          <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 backdrop-blur-xl shadow-lg">
-            <span className="text-amber-400 text-sm">⚠️</span>
-            <span className="text-sm text-amber-300">
-              Add your Gemini API key in{' '}
-              <button onClick={() => setSettingsOpen(true)} className="underline font-semibold hover:text-amber-200 transition-colors">
+          <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[#c4956a]/10 border border-[#c4956a]/15 backdrop-blur-xl shadow-lg">
+            <span className="text-[#c4956a] text-sm">⚠️</span>
+            <span className="text-sm text-[#dab896]" style={{ fontFamily: "'Lora', serif" }}>
+              Configure your Gemini key in{' '}
+              <button onClick={() => setSettingsOpen(true)} className="underline font-semibold hover:text-[#e8dcc8] transition-colors">
                 Settings
               </button>{' '}
-              to enable AI analysis
+              to enable the sage
             </span>
           </div>
         </div>
@@ -218,3 +314,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

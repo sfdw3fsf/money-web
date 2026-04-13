@@ -38,13 +38,13 @@ export default function AlertSettings({
 
       {/* Modal */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-lg">
-        <div className="rounded-2xl bg-[#12121a] border border-white/[0.08] shadow-2xl shadow-black/50 overflow-hidden">
+        <div className="rounded-xl bg-[#231f18] border border-[#c4956a]/15 shadow-2xl shadow-black/50 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
-            <h2 className="text-lg font-bold text-white">⚙️ Settings</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#c4956a]/10">
+            <h2 className="text-lg font-bold text-[#e8dcc8]" style={{ fontFamily: "'Playfair Display', serif" }}>⚙️ Post Office Settings</h2>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5a5a6e] hover:text-white hover:bg-white/[0.05] transition-all"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#6d6354] hover:text-[#e8dcc8] hover:bg-[#c4956a]/10 transition-all"
             >
               ✕
             </button>
@@ -53,16 +53,17 @@ export default function AlertSettings({
           <div className="px-6 py-5 space-y-6 max-h-[70vh] overflow-y-auto">
             {/* Trading Pair */}
             <div>
-              <label className="block text-xs font-semibold text-[#8b8b9e] uppercase tracking-wider mb-2">
-                Trading Pair
+              <label className="block text-xs font-semibold text-[#a0947e] uppercase tracking-wider mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                Market to Watch
               </label>
               <select
                 value={config.pair}
                 onChange={(e) => onUpdate({ pair: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm outline-none focus:border-indigo-500/40 transition-colors appearance-none cursor-pointer"
+                className="w-full px-4 py-3 rounded-lg bg-[#c4956a]/[0.06] border border-[#c4956a]/12 text-[#e8dcc8] text-sm outline-none focus:border-[#c4956a]/30 transition-colors appearance-none cursor-pointer"
+                style={{ fontFamily: "'Lora', serif" }}
               >
                 {AVAILABLE_PAIRS.map((p) => (
-                  <option key={p.value} value={p.value} className="bg-[#12121a]">
+                  <option key={p.value} value={p.value} className="bg-[#231f18]">
                     {p.label}
                   </option>
                 ))}
@@ -71,7 +72,7 @@ export default function AlertSettings({
 
             {/* Interval */}
             <div>
-              <label className="block text-xs font-semibold text-[#8b8b9e] uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-[#a0947e] uppercase tracking-wider mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
                 Timeframe
               </label>
               <div className="grid grid-cols-4 gap-2">
@@ -79,11 +80,12 @@ export default function AlertSettings({
                   <button
                     key={i.value}
                     onClick={() => onUpdate({ interval: i.value })}
-                    className={`py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    className={`py-2.5 rounded-lg text-sm font-medium transition-all ${
                       config.interval === i.value
-                        ? 'bg-indigo-500/20 border border-indigo-500/40 text-indigo-400'
-                        : 'bg-white/[0.04] border border-white/[0.06] text-[#8b8b9e] hover:text-white hover:border-white/[0.12]'
+                        ? 'bg-[#c4956a]/20 border border-[#c4956a]/40 text-[#c4956a]'
+                        : 'bg-[#c4956a]/[0.04] border border-[#c4956a]/8 text-[#a0947e] hover:text-[#e8dcc8] hover:border-[#c4956a]/15'
                     }`}
+                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
                   >
                     {i.label}
                   </button>
@@ -91,35 +93,46 @@ export default function AlertSettings({
               </div>
             </div>
 
-            {/* Gemini API Key */}
+            {/* AI API Key (Gemini or OpenAI) */}
             <div>
-              <label className="block text-xs font-semibold text-[#8b8b9e] uppercase tracking-wider mb-2">
-                Gemini API Key
+              <label className="block text-xs font-semibold text-[#a0947e] uppercase tracking-wider mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+                AI API Key
               </label>
               <input
                 type="password"
                 value={config.aiApiKey}
                 onChange={(e) => onUpdate({ aiApiKey: e.target.value })}
-                placeholder="AIzaSy..."
-                className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm outline-none focus:border-indigo-500/40 transition-colors placeholder:text-[#5a5a6e]"
+                placeholder="AIzaSy... or sk-proj-..."
+                className="w-full px-4 py-3 rounded-lg bg-[#c4956a]/[0.06] border border-[#c4956a]/12 text-[#e8dcc8] text-sm outline-none focus:border-[#c4956a]/30 transition-colors placeholder:text-[#6d6354]"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
               />
-              <p className="text-[10px] text-[#5a5a6e] mt-1">Free tier — get yours at aistudio.google.com/apikey</p>
+              {config.aiApiKey ? (
+                <p className="text-[10px] mt-1.5 font-medium" style={{ fontFamily: "'Lora', serif" }}>
+                  <span className={config.aiApiKey.startsWith('sk-') ? 'text-[#7d9b6f]' : 'text-[#c4956a]'}>
+                    {config.aiApiKey.startsWith('sk-') ? '🤖 OpenAI (GPT-4o-mini)' : '✨ Google Gemini'} — detected
+                  </span>
+                </p>
+              ) : (
+                <p className="text-[10px] text-[#6d6354] mt-1 italic" style={{ fontFamily: "'Lora', serif" }}>
+                  Gemini: aistudio.google.com/apikey · OpenAI: platform.openai.com/api-keys
+                </p>
+              )}
             </div>
 
             {/* Telegram section */}
-            <div className="pt-2 border-t border-white/[0.06]">
+            <div className="pt-2 border-t border-[#c4956a]/10">
               <div className="flex items-center justify-between mb-3">
-                <label className="text-xs font-semibold text-[#8b8b9e] uppercase tracking-wider">
-                  Telegram Notifications
+                <label className="text-xs font-semibold text-[#a0947e] uppercase tracking-wider" style={{ fontFamily: "'Playfair Display', serif" }}>
+                  📮 Telegram Dispatches
                 </label>
                 <button
                   onClick={() => onUpdate({ autoTelegram: !config.autoTelegram })}
                   className={`relative w-11 h-6 rounded-full transition-colors ${
-                    config.autoTelegram ? 'bg-indigo-500' : 'bg-white/[0.1]'
+                    config.autoTelegram ? 'bg-[#7d9b6f]' : 'bg-[#c4956a]/15'
                   }`}
                 >
                   <span
-                    className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                    className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-[#e8dcc8] transition-transform ${
                       config.autoTelegram ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
@@ -132,48 +145,52 @@ export default function AlertSettings({
                   value={config.telegramBotToken}
                   onChange={(e) => onUpdate({ telegramBotToken: e.target.value })}
                   placeholder="Bot Token (from @BotFather)"
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm outline-none focus:border-indigo-500/40 transition-colors placeholder:text-[#5a5a6e]"
+                  className="w-full px-4 py-3 rounded-lg bg-[#c4956a]/[0.06] border border-[#c4956a]/12 text-[#e8dcc8] text-sm outline-none focus:border-[#c4956a]/30 transition-colors placeholder:text-[#6d6354]"
+                  style={{ fontFamily: "'Lora', serif" }}
                 />
                 <input
                   type="text"
                   value={config.telegramChatId}
                   onChange={(e) => onUpdate({ telegramChatId: e.target.value })}
                   placeholder="Chat ID"
-                  className="w-full px-4 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm outline-none focus:border-indigo-500/40 transition-colors placeholder:text-[#5a5a6e]"
+                  className="w-full px-4 py-3 rounded-lg bg-[#c4956a]/[0.06] border border-[#c4956a]/12 text-[#e8dcc8] text-sm outline-none focus:border-[#c4956a]/30 transition-colors placeholder:text-[#6d6354]"
+                  style={{ fontFamily: "'Lora', serif" }}
                 />
 
                 <button
                   onClick={handleTestTelegram}
                   disabled={testingTelegram || !config.telegramBotToken || !config.telegramChatId}
-                  className="w-full py-2.5 rounded-xl text-sm font-medium bg-white/[0.05] border border-white/[0.08] text-white hover:bg-white/[0.08] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full py-2.5 rounded-lg text-sm font-medium bg-[#c4956a]/[0.08] border border-[#c4956a]/15 text-[#e8dcc8] hover:bg-[#c4956a]/[0.12] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{ fontFamily: "'Lora', serif" }}
                 >
-                  {testingTelegram ? 'Testing...' : '📱 Test Connection'}
+                  {testingTelegram ? 'Sending pigeon...' : '📮 Test Connection'}
                 </button>
 
                 {telegramResult === 'success' && (
-                  <p className="text-xs text-emerald-400 bg-emerald-500/10 rounded-lg px-3 py-2">
-                    ✅ Connected! Check your Telegram.
+                  <p className="text-xs text-[#7d9b6f] bg-[#7d9b6f]/10 rounded-lg px-3 py-2" style={{ fontFamily: "'Lora', serif" }}>
+                    ✅ Message delivered! Check your Telegram.
                   </p>
                 )}
                 {telegramResult === 'error' && (
-                  <p className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">
-                    ❌ Failed. Check token and chat ID.
+                  <p className="text-xs text-[#b5594e] bg-[#b5594e]/10 rounded-lg px-3 py-2" style={{ fontFamily: "'Lora', serif" }}>
+                    ❌ Pigeon lost. Check token and chat ID.
                   </p>
                 )}
               </div>
             </div>
 
             {/* Danger zone */}
-            <div className="pt-2 border-t border-white/[0.06]">
+            <div className="pt-2 border-t border-[#c4956a]/10">
               <button
                 onClick={() => {
-                  if (confirm('Clear all signal history? This cannot be undone.')) {
+                  if (confirm('Burn the old ledger? This cannot be undone.')) {
                     onClearHistory();
                   }
                 }}
-                className="w-full py-2.5 rounded-xl text-sm font-medium bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all"
+                className="w-full py-2.5 rounded-lg text-sm font-medium bg-[#b5594e]/10 border border-[#b5594e]/20 text-[#b5594e] hover:bg-[#b5594e]/20 transition-all"
+                style={{ fontFamily: "'Lora', serif" }}
               >
-                🗑️ Clear All Signal History
+                🔥 Clear All Signal History
               </button>
             </div>
           </div>

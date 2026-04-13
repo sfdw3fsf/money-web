@@ -1,16 +1,18 @@
 import type { Signal } from '../types/trading';
+import type { IndicatorResult } from '../utils/indicators';
 import { TELEGRAM_API_URL } from '../config/constants';
 
-function formatSignalMessage(signal: Signal): string {
-  const icon = signal.direction === 'BUY' ? '🟢' : signal.direction === 'SELL' ? '🔴' : '⏸️';
-  const arrow = signal.direction === 'BUY' ? '📈' : signal.direction === 'SELL' ? '📉' : '➡️';
+export interface TelegramSignalData {
+  signal: Signal;
+  indicators: IndicatorResult;
+  rrRatio: number;
+}
 
-  const entryStr = signal.entry.toFixed(2);
-  const tpStr = signal.takeProfit.toFixed(2);
-  const slStr = signal.stopLoss.toFixed(2);
-
-  const tpPercent = (((signal.takeProfit - signal.entry) / signal.entry) * 100).toFixed(2);
-  const slPercent = (((signal.stopLoss - signal.entry) / signal.entry) * 100).toFixed(2);
+function formatSignalMessage(data: TelegramSignalData): string {
+  const { signal, indicators, rrRatio } = data;
+  const direction = signal.direction === 'BUY' ? '🟢 LONG' : '🔴 SHORT';
+  const tpPercent = Math.abs(((signal.takeProfit - signal.entry) / signal.entry) * 100);
+  const slPercent = Math.abs(((signal.stopLoss - signal.entry) / signal.entry) * 100);
 
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', {
@@ -20,14 +22,16 @@ function formatSignalMessage(signal: Signal): string {
     timeZone: 'Asia/Ho_Chi_Minh',
   });
 
-  return `${icon} *${signal.direction} SIGNAL — ${signal.pair} ${signal.interval}*
+  return `${direction} *${signal.pair}*
 ━━━━━━━━━━━━━━━
-📍 Entry: \`$${entryStr}\`
-🎯 TP: \`$${tpStr}\` (${Number(tpPercent) > 0 ? '+' : ''}${tpPercent}%)
-🛑 SL: \`$${slStr}\` (${slPercent}%)
+📍 Entry: \`$${signal.entry.toFixed(2)}\`
+🎯 TP: \`$${signal.takeProfit.toFixed(2)}\` (+${tpPercent.toFixed(2)}%)
+🛑 SL: \`$${signal.stopLoss.toFixed(2)}\` (-${slPercent.toFixed(2)}%)
+⚖️ R:R: \`${rrRatio.toFixed(1)}:1\`
+━━━━━━━━━━━━━━━
 📊 Confidence: \`${signal.confidence}%\`
-⚖️ R:R = \`${signal.riskReward}\`
-${arrow} Trend: \`${signal.trend}\`
+📈 15m: \`${indicators.trend15m}\` | 5m: \`${indicators.trend5m}\`
+📉 RSI: \`${indicators.rsi14.toFixed(0)}\` | Vol: \`${indicators.volumeTrend}\`
 ━━━━━━━━━━━━━━━
 💡 _${signal.reasoning}_
 ━━━━━━━━━━━━━━━
@@ -37,14 +41,14 @@ ${arrow} Trend: \`${signal.trend}\`
 export async function sendTelegramSignal(
   botToken: string,
   chatId: string,
-  signal: Signal
+  data: TelegramSignalData,
 ): Promise<boolean> {
   if (!botToken || !chatId) {
     console.warn('Telegram not configured — skipping notification');
     return false;
   }
 
-  const message = formatSignalMessage(signal);
+  const message = formatSignalMessage(data);
 
   try {
     const response = await fetch(
@@ -58,7 +62,7 @@ export async function sendTelegramSignal(
           parse_mode: 'Markdown',
           disable_web_page_preview: true,
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -76,7 +80,7 @@ export async function sendTelegramSignal(
 
 export async function testTelegramConnection(
   botToken: string,
-  chatId: string
+  chatId: string,
 ): Promise<boolean> {
   try {
     const response = await fetch(
@@ -86,10 +90,10 @@ export async function testTelegramConnection(
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: chatId,
-          text: '✅ *MoneyWeb Trading Bot Connected!*\n\nYou will receive trading signals here.',
+          text: '✅ *MoneyWeb Trading Bot Connected!*\n\nYou will receive trading signals here.\n\n_Upgraded: Now includes 15m trend, RSI, volume, and R:R ratio._',
           parse_mode: 'Markdown',
         }),
-      }
+      },
     );
 
     return response.ok;
