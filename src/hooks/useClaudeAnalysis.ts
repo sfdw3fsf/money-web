@@ -113,50 +113,50 @@ export function useAIAnalysis({
         return;
       }
 
-      // ===== STEP 1: Calculate indicators =====
-      const indResult = calculateIndicators(candles5m, candles15m);
-      setIndicators(indResult);
-
-      // ===== STEP 2: Pre-filter =====
-      const filterResult: FilterResult = preFilter(indResult);
-
-      if (!filterResult.shouldAnalyze) {
-        setLastFilterReason(filterResult.reason ?? 'unknown');
-        console.log(`[Pre-filter] Blocked: ${filterResult.reason}`);
-
-        // Log filtered signal to journal
-        if (indResult) {
-          addJournalEntry({
-            id: `flt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-            timestamp: Date.now(),
-            pair: pair.toUpperCase(),
-            direction: 'WAIT',
-            entry: 0,
-            takeProfit: 0,
-            stopLoss: 0,
-            confidence: 0,
-            reasoning: `Pre-filter rejected: ${filterResult.reason}`,
-            trend15m: indResult.trend15m,
-            trend5m: indResult.trend5m,
-            ema20: indResult.ema20_5m,
-            ema50: indResult.ema50_5m,
-            rsi: indResult.rsi14,
-            volumeTrend: indResult.volumeTrend,
-            isSideways: indResult.isSideways,
-            timeframeAligned: indResult.timeframeAligned,
-            filteredOut: true,
-            filterReason: filterResult.reason,
-          });
-        }
-        return; // DO NOT call Gemini
-      }
-
-      setLastFilterReason(null);
-      cooldownRef.current = true;
-      setIsAnalyzing(true);
-      setLastError(null);
-
       try {
+        // ===== STEP 1: Calculate indicators =====
+        const indResult = calculateIndicators(candles5m, candles15m);
+        setIndicators(indResult);
+
+        // ===== STEP 2: Pre-filter =====
+        const filterResult: FilterResult = preFilter(indResult);
+
+        if (!filterResult.shouldAnalyze) {
+          setLastFilterReason(filterResult.reason ?? 'unknown');
+          console.log(`[Pre-filter] Blocked: ${filterResult.reason}`);
+
+          // Log filtered signal to journal
+          if (indResult) {
+            addJournalEntry({
+              id: `flt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+              timestamp: Date.now(),
+              pair: pair.toUpperCase(),
+              direction: 'WAIT',
+              entry: 0,
+              takeProfit: 0,
+              stopLoss: 0,
+              confidence: 0,
+              reasoning: `Pre-filter rejected: ${filterResult.reason}`,
+              trend15m: indResult.trend15m,
+              trend5m: indResult.trend5m,
+              ema20: indResult.ema20_5m,
+              ema50: indResult.ema50_5m,
+              rsi: indResult.rsi14,
+              volumeTrend: indResult.volumeTrend,
+              isSideways: indResult.isSideways,
+              timeframeAligned: indResult.timeframeAligned,
+              filteredOut: true,
+              filterReason: filterResult.reason,
+            });
+          }
+          return; // DO NOT call Gemini
+        }
+
+        setLastFilterReason(null);
+        cooldownRef.current = true;
+        setIsAnalyzing(true);
+        setLastError(null);
+
         // ===== STEP 3: Call Gemini (with pre-calculated indicators) =====
         const signal = await analyzeCandles(
           aiApiKey,
@@ -223,7 +223,7 @@ export function useAIAnalysis({
           await sendTelegramSignal(telegramBotToken, telegramChatId, telegramData);
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Analysis failed';
+        const message = err instanceof Error ? err.message : 'Analysis failed. Check your API Key or Console.';
         setLastError(message);
         console.error('AI analysis error:', err);
       } finally {
@@ -232,7 +232,7 @@ export function useAIAnalysis({
         // Cooldown: prevent rapid consecutive calls (30 seconds)
         setTimeout(() => {
           cooldownRef.current = false;
-        }, 30000);
+        }, 10000); // Reduced cooldown to 10s for easier manual testing
       }
     },
     [pair, interval, aiApiKey, autoTelegram, telegramBotToken, telegramChatId, isAnalyzing],
