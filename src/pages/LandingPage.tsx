@@ -6,10 +6,10 @@ import Footer from '../components/Footer'
 
 function HeroSection() {
   return (
-    <section id="hero" className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+    <section id="hero" className="relative min-h-[100dvh] flex items-center justify-center pt-24 sm:pt-20 pb-16 overflow-hidden">
       {/* Warm Glow Orbs */}
-      <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#c4956a]/[0.06] rounded-full blur-[150px]" />
-      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#8b7355]/[0.04] rounded-full blur-[120px]" style={{ animationDelay: '1s' }} />
+      <div className="absolute top-1/4 left-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-[#c4956a]/[0.06] rounded-full blur-[100px] sm:blur-[150px]" />
+      <div className="absolute bottom-1/4 right-1/4 w-[260px] sm:w-[400px] h-[260px] sm:h-[400px] bg-[#8b7355]/[0.04] rounded-full blur-[100px] sm:blur-[120px]" style={{ animationDelay: '1s' }} />
 
       {/* Subtle Grid */}
       <div
@@ -20,16 +20,16 @@ function HeroSection() {
         }}
       />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-5 sm:px-6 text-center">
         {/* Badge */}
-        <div className="animate-fade-in-up inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#c4956a]/[0.08] border border-[#c4956a]/15 mb-8">
+        <div className="animate-fade-in-up inline-flex items-center gap-2 px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-[#c4956a]/[0.08] border border-[#c4956a]/15 mb-6 sm:mb-8">
           <span className="text-sm">🌾</span>
-          <span className="text-sm text-[#c4956a] font-medium" style={{ fontFamily: "'Lora', serif" }}>Now open — Patient traders welcome</span>
+          <span className="text-xs sm:text-sm text-[#c4956a] font-medium" style={{ fontFamily: "'Lora', serif" }}>Now open — Patient traders welcome</span>
         </div>
 
         {/* Heading */}
         <h1
-          className="animate-fade-in-up delay-100 opacity-0 text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.08] tracking-tight mb-6"
+          className="animate-fade-in-up delay-100 opacity-0 text-[2.25rem] leading-[1.1] sm:text-6xl lg:text-7xl font-bold tracking-tight mb-5 sm:mb-6"
           style={{ fontFamily: "'Playfair Display', serif" }}
         >
           From the Fields,
@@ -39,7 +39,7 @@ function HeroSection() {
 
         {/* Subtitle */}
         <p
-          className="animate-fade-in-up delay-200 opacity-0 text-lg sm:text-xl text-[#a0947e] max-w-2xl mx-auto mb-10 leading-relaxed"
+          className="animate-fade-in-up delay-200 opacity-0 text-base sm:text-xl text-[#a0947e] max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed"
           style={{ fontFamily: "'Lora', serif" }}
         >
           A countryside trading post where patience meets precision.
@@ -48,33 +48,33 @@ function HeroSection() {
         </p>
 
         {/* CTA Buttons */}
-        <div className="animate-fade-in-up delay-300 opacity-0 flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-          <Link to="/dashboard" className="btn-primary text-lg !px-10 !py-4 flex items-center gap-2" id="hero-cta-primary">
+        <div className="animate-fade-in-up delay-300 opacity-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 mb-12 sm:mb-16">
+          <Link to="/dashboard" className="btn-primary text-base sm:text-lg !px-6 sm:!px-10 !py-3.5 sm:!py-4 flex items-center justify-center gap-2" id="hero-cta-primary">
             Enter the Trading Post
             <span>→</span>
           </Link>
-          <a href="#the-method" className="btn-secondary text-lg !px-10 !py-4" id="hero-cta-secondary">
+          <a href="#the-method" className="btn-secondary text-base sm:text-lg !px-6 sm:!px-10 !py-3.5 sm:!py-4 text-center" id="hero-cta-secondary">
             Learn Our Method
           </a>
         </div>
 
         {/* Stats */}
-        <div className="animate-fade-in-up delay-400 opacity-0 grid grid-cols-3 gap-6 max-w-lg mx-auto">
+        <div className="animate-fade-in-up delay-400 opacity-0 grid grid-cols-3 gap-4 sm:gap-6 max-w-lg mx-auto">
           {[
             { value: '80%', label: 'Code-Filtered' },
             { value: '6×', label: 'Lower API Cost' },
             { value: '1.5:1', label: 'Min Risk-Reward' },
           ].map((stat) => (
             <div key={stat.label} className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-[#e8dcc8]" style={{ fontFamily: "'Playfair Display', serif" }}>{stat.value}</div>
-              <div className="text-xs sm:text-sm text-[#6d6354] mt-1" style={{ fontFamily: "'Lora', serif" }}>{stat.label}</div>
+              <div className="text-xl sm:text-3xl font-bold text-[#e8dcc8]" style={{ fontFamily: "'Playfair Display', serif" }}>{stat.value}</div>
+              <div className="text-[10px] sm:text-sm text-[#6d6354] mt-1" style={{ fontFamily: "'Lora', serif" }}>{stat.label}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* Bottom Fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#1a1510] to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-24 sm:h-32 bg-gradient-to-t from-[#1a1510] to-transparent" />
     </section>
   )
 }
@@ -114,26 +114,26 @@ function FeaturesSection() {
   ]
 
   return (
-    <section id="provisions" className="relative py-28 px-6">
+    <section id="provisions" className="relative py-16 sm:py-28 px-5 sm:px-6">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 sm:mb-16">
           <span className="section-label">Provisions</span>
-          <h2 className="text-4xl sm:text-5xl font-bold text-[#e8dcc8] mt-3 mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h2 className="text-3xl sm:text-5xl font-bold text-[#e8dcc8] mt-3 mb-4 sm:mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
             Tools of the <span className="gradient-text italic">Trade</span>
           </h2>
-          <p className="text-[#a0947e] text-lg max-w-2xl mx-auto" style={{ fontFamily: "'Lora', serif" }}>
+          <p className="text-[#a0947e] text-base sm:text-lg max-w-2xl mx-auto" style={{ fontFamily: "'Lora', serif" }}>
             A well-stocked post for the patient trader. Every tool earns its keep.
           </p>
         </div>
 
         {/* Feature Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {features.map((feature, i) => (
             <div
               key={feature.title}
               id={`feature-card-${i}`}
-              className="group relative p-7 rounded-xl bg-[#231f18]/40 border border-[#c4956a]/8 hover:bg-[#231f18]/60 hover:border-[#c4956a]/15 transition-all duration-500 cursor-default"
+              className="group relative p-5 sm:p-7 rounded-xl bg-[#231f18]/40 border border-[#c4956a]/8 hover:bg-[#231f18]/60 hover:border-[#c4956a]/15 transition-all duration-500 cursor-default"
             >
               <div className="relative z-10">
                 <div className="w-12 h-12 rounded-lg bg-[#c4956a]/[0.08] border border-[#c4956a]/12 flex items-center justify-center text-2xl mb-5 group-hover:scale-110 transition-all duration-300">
@@ -175,41 +175,41 @@ function HowItWorksSection() {
   ]
 
   return (
-    <section id="the-method" className="relative py-28 px-6">
+    <section id="the-method" className="relative py-16 sm:py-28 px-5 sm:px-6">
       {/* Background accent */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#c4956a]/[0.03] rounded-full blur-[150px]" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-[#c4956a]/[0.03] rounded-full blur-[120px] sm:blur-[150px]" />
 
       <div className="relative max-w-5xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-20">
+        <div className="text-center mb-12 sm:mb-20">
           <span className="section-label">The Method</span>
-          <h2 className="text-4xl sm:text-5xl font-bold text-[#e8dcc8] mt-3 mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h2 className="text-3xl sm:text-5xl font-bold text-[#e8dcc8] mt-3 mb-4 sm:mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
             How the <span className="gradient-text italic">Post</span> Works
           </h2>
-          <p className="text-[#a0947e] text-lg max-w-2xl mx-auto" style={{ fontFamily: "'Lora', serif" }}>
+          <p className="text-[#a0947e] text-base sm:text-lg max-w-2xl mx-auto" style={{ fontFamily: "'Lora', serif" }}>
             Four careful steps. No rushing. Like planting season — timing is everything.
           </p>
         </div>
 
         {/* Steps */}
-        <div className="space-y-12">
+        <div className="space-y-8 sm:space-y-12">
           {steps.map((s, i) => (
             <div
               key={s.step}
               id={`step-${i}`}
-              className={`flex flex-col md:flex-row items-center gap-8 ${
+              className={`flex flex-row items-start sm:items-center gap-5 sm:gap-8 ${
                 i % 2 !== 0 ? 'md:flex-row-reverse' : ''
               }`}
             >
               {/* Step Number */}
-              <div className="flex-shrink-0 w-20 h-20 rounded-xl bg-[#c4956a]/[0.08] border border-[#c4956a]/15 flex items-center justify-center">
-                <span className="text-2xl font-bold gradient-text" style={{ fontFamily: "'Playfair Display', serif" }}>{s.step}</span>
+              <div className="flex-shrink-0 w-14 h-14 sm:w-20 sm:h-20 rounded-xl bg-[#c4956a]/[0.08] border border-[#c4956a]/15 flex items-center justify-center">
+                <span className="text-xl sm:text-2xl font-bold gradient-text" style={{ fontFamily: "'Playfair Display', serif" }}>{s.step}</span>
               </div>
 
               {/* Content */}
-              <div className={`flex-1 ${i % 2 !== 0 ? 'md:text-right' : ''}`}>
-                <h3 className="text-xl font-semibold text-[#e8dcc8] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>{s.title}</h3>
-                <p className="text-[#a0947e] leading-relaxed" style={{ fontFamily: "'Lora', serif" }}>{s.description}</p>
+              <div className={`flex-1 min-w-0 ${i % 2 !== 0 ? 'md:text-right' : ''}`}>
+                <h3 className="text-lg sm:text-xl font-semibold text-[#e8dcc8] mb-1.5 sm:mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>{s.title}</h3>
+                <p className="text-sm sm:text-base text-[#a0947e] leading-relaxed" style={{ fontFamily: "'Lora', serif" }}>{s.description}</p>
               </div>
 
               {/* Connector Line (hidden on last) */}
@@ -279,28 +279,28 @@ function PricingSection() {
   ]
 
   return (
-    <section id="rates" className="relative py-28 px-6">
+    <section id="rates" className="relative py-16 sm:py-28 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 sm:mb-16">
           <span className="section-label">Rates</span>
-          <h2 className="text-4xl sm:text-5xl font-bold text-[#e8dcc8] mt-3 mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h2 className="text-3xl sm:text-5xl font-bold text-[#e8dcc8] mt-3 mb-4 sm:mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
             Honest, <span className="gradient-text italic">Fair</span> Rates
           </h2>
-          <p className="text-[#a0947e] text-lg max-w-2xl mx-auto" style={{ fontFamily: "'Lora', serif" }}>
+          <p className="text-[#a0947e] text-base sm:text-lg max-w-2xl mx-auto" style={{ fontFamily: "'Lora', serif" }}>
             No hidden fees. No surprises. Like a handshake at the market.
           </p>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-6 items-start">
+        <div className="grid md:grid-cols-3 gap-5 sm:gap-6 items-start">
           {plans.map((plan) => (
             <div
               key={plan.name}
               id={`pricing-${plan.name.toLowerCase().replace(/\s+/g, '-')}`}
-              className={`relative rounded-xl p-8 transition-all duration-500 ${
+              className={`relative rounded-xl p-6 sm:p-8 transition-all duration-500 ${
                 plan.highlighted
-                  ? 'bg-[#c4956a]/[0.08] border-2 border-[#c4956a]/25 scale-[1.02] shadow-xl shadow-[#c4956a]/10'
+                  ? 'bg-[#c4956a]/[0.08] border-2 border-[#c4956a]/25 shadow-xl shadow-[#c4956a]/10 md:scale-[1.02]'
                   : 'bg-[#231f18]/40 border border-[#c4956a]/8 hover:border-[#c4956a]/15'
               }`}
             >
@@ -372,21 +372,21 @@ function TestimonialsSection() {
   ]
 
   return (
-    <section id="testimonials" className="relative py-28 px-6">
+    <section id="testimonials" className="relative py-16 sm:py-28 px-5 sm:px-6">
       <div className="max-w-6xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 sm:mb-16">
           <span className="section-label">Testimonials</span>
-          <h2 className="text-4xl sm:text-5xl font-bold text-[#e8dcc8] mt-3 mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <h2 className="text-3xl sm:text-5xl font-bold text-[#e8dcc8] mt-3 mb-4 sm:mb-5" style={{ fontFamily: "'Playfair Display', serif" }}>
             Word from the <span className="gradient-text italic">Fields</span>
           </h2>
-          <p className="text-[#a0947e] text-lg max-w-2xl mx-auto" style={{ fontFamily: "'Lora', serif" }}>
+          <p className="text-[#a0947e] text-base sm:text-lg max-w-2xl mx-auto" style={{ fontFamily: "'Lora', serif" }}>
             Honest words from honest traders who chose patience over haste.
           </p>
         </div>
 
         {/* Testimonial Cards */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {testimonials.map((t) => (
             <div
               key={t.name}
@@ -420,24 +420,24 @@ function TestimonialsSection() {
 
 function CTASection() {
   return (
-    <section id="cta" className="relative py-28 px-6">
+    <section id="cta" className="relative py-16 sm:py-28 px-5 sm:px-6">
       <div className="max-w-4xl mx-auto text-center">
         {/* Glow Background */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] bg-[#c4956a]/[0.06] rounded-full blur-[120px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[500px] h-[260px] sm:h-[300px] bg-[#c4956a]/[0.06] rounded-full blur-[100px] sm:blur-[120px]" />
 
-        <div className="relative z-10 p-12 rounded-2xl bg-[#c4956a]/[0.06] border border-[#c4956a]/15">
-          <span className="text-4xl mb-4 block">🌻</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#e8dcc8] mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
+        <div className="relative z-10 p-8 sm:p-12 rounded-2xl bg-[#c4956a]/[0.06] border border-[#c4956a]/15">
+          <span className="text-3xl sm:text-4xl mb-3 sm:mb-4 block">🌻</span>
+          <h2 className="text-2xl sm:text-4xl font-bold text-[#e8dcc8] mb-3 sm:mb-4" style={{ fontFamily: "'Playfair Display', serif" }}>
             The Fields Are Waiting
           </h2>
-          <p className="text-[#a0947e] text-lg mb-8 max-w-xl mx-auto" style={{ fontFamily: "'Lora', serif" }}>
+          <p className="text-[#a0947e] text-base sm:text-lg mb-6 sm:mb-8 max-w-xl mx-auto" style={{ fontFamily: "'Lora', serif" }}>
             Step into the Old Trading Post. Patience rewarded, noise filtered, signals delivered.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/dashboard" className="btn-primary text-lg !px-10 !py-4" id="cta-primary">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4">
+            <Link to="/dashboard" className="btn-primary text-base sm:text-lg !px-6 sm:!px-10 !py-3.5 sm:!py-4 text-center" id="cta-primary">
               Enter the Post — It's Free
             </Link>
-            <span className="text-sm text-[#6d6354] italic" style={{ fontFamily: "'Lora', serif" }}>No credit card needed</span>
+            <span className="text-xs sm:text-sm text-[#6d6354] italic" style={{ fontFamily: "'Lora', serif" }}>No credit card needed</span>
           </div>
         </div>
       </div>

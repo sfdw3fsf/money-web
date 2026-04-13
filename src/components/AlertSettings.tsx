@@ -36,21 +36,27 @@ export default function AlertSettings({
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" onClick={onClose} />
 
-      {/* Modal */}
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-lg">
-        <div className="rounded-xl bg-[#231f18] border border-[#c4956a]/15 shadow-2xl shadow-black/50 overflow-hidden">
+      {/* Modal — bottom sheet on mobile, centered dialog on sm+ */}
+      <div className="fixed inset-x-0 bottom-0 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 z-50 w-full sm:max-w-lg">
+        <div className="rounded-t-2xl sm:rounded-xl bg-[#231f18] border border-[#c4956a]/15 border-b-0 sm:border-b shadow-2xl shadow-black/50 overflow-hidden pb-safe sm:pb-0">
+          {/* Mobile grabber */}
+          <div className="sm:hidden flex justify-center pt-2">
+            <span className="w-10 h-1 rounded-full bg-[#c4956a]/20" />
+          </div>
+
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#c4956a]/10">
-            <h2 className="text-lg font-bold text-[#e8dcc8]" style={{ fontFamily: "'Playfair Display', serif" }}>⚙️ Post Office Settings</h2>
+          <div className="flex items-center justify-between px-5 sm:px-6 py-3 sm:py-4 border-b border-[#c4956a]/10">
+            <h2 className="text-base sm:text-lg font-bold text-[#e8dcc8]" style={{ fontFamily: "'Playfair Display', serif" }}>⚙️ Post Office Settings</h2>
             <button
               onClick={onClose}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#6d6354] hover:text-[#e8dcc8] hover:bg-[#c4956a]/10 transition-all"
+              className="w-9 h-9 rounded-lg flex items-center justify-center text-[#6d6354] hover:text-[#e8dcc8] hover:bg-[#c4956a]/10 transition-all"
+              aria-label="Close settings"
             >
               ✕
             </button>
           </div>
 
-          <div className="px-6 py-5 space-y-6 max-h-[70vh] overflow-y-auto">
+          <div className="px-5 sm:px-6 py-5 space-y-5 sm:space-y-6 max-h-[calc(85dvh-4rem)] sm:max-h-[70vh] overflow-y-auto">
             {/* Trading Pair */}
             <div>
               <label className="block text-xs font-semibold text-[#a0947e] uppercase tracking-wider mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>

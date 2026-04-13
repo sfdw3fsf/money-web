@@ -24,7 +24,7 @@ interface UseAIAnalysisReturn {
   lastError: string | null;
   lastFilterReason: string | null;
   indicators: IndicatorResult | null;
-  analyze: (candles5m: Candle[], candles15m: Candle[]) => Promise<void>;
+  analyze: (candles5m: Candle[], candles15m: Candle[], force?: boolean) => Promise<void>;
   clearSignal: () => void;
 }
 
@@ -92,9 +92,12 @@ export function useAIAnalysis({
   onNewSignalRef.current = onNewSignal;
 
   const analyze = useCallback(
-    async (candles5m: Candle[], candles15m: Candle[]) => {
-      // Rate limit: skip if already analyzing or in cooldown
-      if (cooldownRef.current || isAnalyzing) {
+    async (candles5m: Candle[], candles15m: Candle[], force = false) => {
+      // Rate limit: skip if already analyzing or in cooldown (but allow force to override cooldown)
+      if (isAnalyzing) {
+        return;
+      }
+      if (cooldownRef.current && !force) {
         return;
       }
 
@@ -118,8 +121,10 @@ export function useAIAnalysis({
         const indResult = calculateIndicators(candles5m, candles15m);
         setIndicators(indResult);
 
-        // ===== STEP 2: Pre-filter =====
-        const filterResult: FilterResult = preFilter(indResult);
+        // ===== STEP 2: Pre-filter (bypassed on force/manual) =====
+        const filterResult: FilterResult = force
+          ? { shouldAnalyze: true, indicators: indResult }
+          : preFilter(indResult);
 
         if (!filterResult.shouldAnalyze) {
           setLastFilterReason(filterResult.reason ?? 'unknown');

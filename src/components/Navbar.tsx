@@ -17,14 +17,14 @@ export default function Navbar() {
   return (
     <nav
       id="main-navbar"
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 pt-safe ${
         scrolled
           ? "bg-[#1a1510]/90 backdrop-blur-xl border-b border-[#c4956a]/10 shadow-lg shadow-black/30"
           : "bg-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="p-4 flex items-center justify-between h-18">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+        <div className="py-3 sm:p-4 flex items-center justify-between h-16 sm:h-18">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group" id="nav-logo">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#c4956a] to-[#8b7355] flex items-center justify-center shadow-lg shadow-[#c4956a]/20 group-hover:shadow-[#c4956a]/30 transition-shadow duration-300 border border-[#c4956a]/30">
@@ -80,7 +80,7 @@ export default function Navbar() {
           {/* Mobile Hamburger */}
           <button
             id="mobile-menu-btn"
-            className="md:hidden flex flex-col gap-1.5 p-2"
+            className="md:hidden flex flex-col gap-1.5 p-3 -mr-2"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >

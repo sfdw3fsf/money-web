@@ -15,10 +15,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      className="relative grid lg:grid-cols-2"
-      style={{ height: "100dvh", overflow: "hidden" }}
-    >
+    <div className="relative grid lg:grid-cols-2 min-h-[100dvh] lg:h-[100dvh] lg:overflow-hidden">
       {/* Left Side — Decorative */}
       <div className="hidden lg:grid relative overflow-hidden bg-[#1a1510] place-items-center">
         {/* Warm Gradient Orbs */}
@@ -107,12 +104,12 @@ export default function LoginPage() {
       </div>
 
       {/* Right Side — Form */}
-      <div className="grid place-items-center px-6 bg-[#1a1510]">
+      <div className="grid place-items-center px-5 sm:px-6 py-10 lg:py-0 bg-[#1a1510] pt-safe pb-safe">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <Link
             to="/"
-            className="lg:hidden flex items-center gap-3 mb-10 justify-center"
+            className="lg:hidden flex items-center gap-3 mb-8 sm:mb-10 justify-center"
           >
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#c4956a] to-[#8b7355] flex items-center justify-center border border-[#c4956a]/30">
               <span className="text-lg">🌾</span>

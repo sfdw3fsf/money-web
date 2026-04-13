@@ -8,14 +8,17 @@ interface SignalHistoryProps {
   onUnfollow: (id: string) => void;
   onSkip: (id: string) => void;
   onClose: (id: string, status: Signal['status'], closePrice?: number) => void;
+  /** When true, render as an inline panel (for mobile tab content). */
+  inline?: boolean;
 }
 
-export default function SignalHistory({ signals, currentPrice, onFollow, onUnfollow, onSkip, onClose }: SignalHistoryProps) {
+export default function SignalHistory({ signals, currentPrice, onFollow, onUnfollow, onSkip, onClose, inline = false }: SignalHistoryProps) {
   const [closingId, setClosingId] = useState<string | null>(null);
   const [closePrice, setClosePrice] = useState('');
 
-  // ── Draggable ──────────────────────────────────────────────
+  // ── Draggable (desktop floating mode only) ─────────────────
   const [pos, setPos] = useState<{ x: number; y: number }>(() => {
+    if (inline) return { x: 0, y: 0 };
     try {
       const saved = localStorage.getItem('signal_ledger_pos');
       if (saved) return JSON.parse(saved) as { x: number; y: number };
@@ -28,13 +31,15 @@ export default function SignalHistory({ signals, currentPrice, onFollow, onUnfol
   useEffect(() => { posRef.current = pos; }, [pos]);
 
   const onHeaderMouseDown = useCallback((e: React.MouseEvent) => {
+    if (inline) return;
     if ((e.target as HTMLElement).closest('button, input')) return;
     isDragging.current = true;
     dragOffset.current = { x: e.clientX - posRef.current.x, y: e.clientY - posRef.current.y };
     e.preventDefault();
-  }, []);
+  }, [inline]);
 
   useEffect(() => {
+    if (inline) return;
     const onMouseMove = (e: MouseEvent) => {
       if (!isDragging.current) return;
       const x = Math.max(0, Math.min(window.innerWidth - 340, e.clientX - dragOffset.current.x));
@@ -53,7 +58,7 @@ export default function SignalHistory({ signals, currentPrice, onFollow, onUnfol
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, []);
+  }, [inline]);
   // ──────────────────────────────────────────────────────────
 
   const pendingSignals = signals.filter((s) => s.status === 'active');
@@ -115,16 +120,22 @@ export default function SignalHistory({ signals, currentPrice, onFollow, onUnfol
 
   return (
     <div
-      className="fixed z-50 rounded-xl bg-[#1e1a13]/95 border border-[#c4956a]/15 overflow-hidden backdrop-blur-md shadow-2xl shadow-black/50"
-      style={{ left: pos.x, top: pos.y, width: 340 }}
+      className={
+        inline
+          ? 'relative rounded-xl bg-[#1e1a13]/95 border border-[#c4956a]/15 overflow-hidden backdrop-blur-md shadow-xl shadow-black/30 w-full'
+          : 'fixed z-50 rounded-xl bg-[#1e1a13]/95 border border-[#c4956a]/15 overflow-hidden backdrop-blur-md shadow-2xl shadow-black/50'
+      }
+      style={inline ? undefined : { left: pos.x, top: pos.y, width: 340 }}
     >
-      {/* Header — drag handle */}
+      {/* Header — drag handle (floating mode only) */}
       <div
-        className="px-5 py-3 border-b border-[#c4956a]/10 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
+        className={`px-5 py-3 border-b border-[#c4956a]/10 flex items-center justify-between select-none ${
+          inline ? '' : 'cursor-grab active:cursor-grabbing'
+        }`}
         onMouseDown={onHeaderMouseDown}
       >
         <h3 className="text-sm font-semibold text-[#e8dcc8] flex items-center gap-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-          <span className="text-[#6d6354] text-[10px]">⠿</span>
+          {!inline && <span className="text-[#6d6354] text-[10px]">⠿</span>}
           📒 Signal Ledger
         </h3>
         <div className="flex items-center gap-2">
@@ -137,7 +148,7 @@ export default function SignalHistory({ signals, currentPrice, onFollow, onUnfol
         </div>
       </div>
 
-      <div className="max-h-[440px] overflow-y-auto">
+      <div className={inline ? 'max-h-[calc(100dvh-22rem)] min-h-[320px] overflow-y-auto' : 'max-h-[440px] overflow-y-auto'}>
         {signals.length === 0 ? (
           <div className="px-5 py-8 text-center">
             <p className="text-xs text-[#6d6354] italic" style={{ fontFamily: "'Lora', serif" }}>The ledger is empty. Signals will be recorded here.</p>
@@ -195,7 +206,7 @@ export default function SignalHistory({ signals, currentPrice, onFollow, onUnfol
                       </div>
                     )}
 
-                    <div className="flex items-center gap-3 text-[10px] text-[#6d6354] mb-3" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#6d6354] mb-3" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                       <span>Entry: ${signal.entry.toFixed(2)}</span>
                       <span>Now: ${currentPrice.toFixed(2)}</span>
                       <span className="text-[#7d9b6f]/60">TP: ${signal.takeProfit.toFixed(2)}</span>
@@ -281,7 +292,7 @@ export default function SignalHistory({ signals, currentPrice, onFollow, onUnfol
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-3 text-[10px] text-[#6d6354] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#6d6354] mb-2" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
                         <span>Entry: ${signal.entry.toFixed(2)}</span>
                         <span>Now: ${currentPrice.toFixed(2)}</span>
                         <span className="text-[#7d9b6f]/60">TP: ${signal.takeProfit.toFixed(2)}</span>
@@ -289,39 +300,41 @@ export default function SignalHistory({ signals, currentPrice, onFollow, onUnfol
                       </div>
 
                       {closingId === signal.id ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-2">
                           <input
                             type="number"
                             value={closePrice}
                             onChange={(e) => setClosePrice(e.target.value)}
                             placeholder={`${currentPrice.toFixed(2)}`}
-                            className="flex-1 px-3 py-1.5 rounded-lg bg-[#c4956a]/[0.06] border border-[#c4956a]/12 text-[#e8dcc8] text-xs outline-none focus:border-[#c4956a]/30"
+                            className="w-full px-3 py-2 rounded-lg bg-[#c4956a]/[0.06] border border-[#c4956a]/12 text-[#e8dcc8] text-xs outline-none focus:border-[#c4956a]/30"
                             style={{ fontFamily: "'JetBrains Mono', monospace" }}
                           />
-                          <button
-                            onClick={() => handleClose(signal.id, 'tp_hit')}
-                            className="px-2.5 py-1.5 rounded-lg bg-[#7d9b6f]/10 text-[#7d9b6f] text-[10px] font-medium hover:bg-[#7d9b6f]/20 transition-colors"
-                          >
-                            TP Hit
-                          </button>
-                          <button
-                            onClick={() => handleClose(signal.id, 'sl_hit')}
-                            className="px-2.5 py-1.5 rounded-lg bg-[#b5594e]/10 text-[#b5594e] text-[10px] font-medium hover:bg-[#b5594e]/20 transition-colors"
-                          >
-                            SL Hit
-                          </button>
-                          <button
-                            onClick={() => handleClose(signal.id, 'manual_close')}
-                            className="px-2.5 py-1.5 rounded-lg bg-[#c4956a]/[0.08] text-[#a0947e] text-[10px] font-medium hover:bg-[#c4956a]/[0.12] transition-colors"
-                          >
-                            Manual
-                          </button>
-                          <button
-                            onClick={() => { setClosingId(null); setClosePrice(''); }}
-                            className="px-2 py-1.5 text-[#6d6354] text-[10px] hover:text-[#e8dcc8] transition-colors"
-                          >
-                            ✕
-                          </button>
+                          <div className="grid grid-cols-4 gap-1.5">
+                            <button
+                              onClick={() => handleClose(signal.id, 'tp_hit')}
+                              className="py-2 rounded-lg bg-[#7d9b6f]/10 text-[#7d9b6f] text-[10px] font-medium hover:bg-[#7d9b6f]/20 transition-colors"
+                            >
+                              TP Hit
+                            </button>
+                            <button
+                              onClick={() => handleClose(signal.id, 'sl_hit')}
+                              className="py-2 rounded-lg bg-[#b5594e]/10 text-[#b5594e] text-[10px] font-medium hover:bg-[#b5594e]/20 transition-colors"
+                            >
+                              SL Hit
+                            </button>
+                            <button
+                              onClick={() => handleClose(signal.id, 'manual_close')}
+                              className="py-2 rounded-lg bg-[#c4956a]/[0.08] text-[#a0947e] text-[10px] font-medium hover:bg-[#c4956a]/[0.12] transition-colors"
+                            >
+                              Manual
+                            </button>
+                            <button
+                              onClick={() => { setClosingId(null); setClosePrice(''); }}
+                              className="py-2 rounded-lg text-[#6d6354] text-[10px] hover:text-[#e8dcc8] hover:bg-[#c4956a]/[0.06] transition-colors"
+                            >
+                              ✕
+                            </button>
+                          </div>
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">

@@ -2,9 +2,9 @@ import { Link } from 'react-router-dom'
 
 export default function Footer() {
   return (
-    <footer id="site-footer" className="relative border-t border-[#c4956a]/10 bg-[#1a1510]">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+    <footer id="site-footer" className="relative border-t border-[#c4956a]/10 bg-[#1a1510] pb-safe">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10 mb-10 sm:mb-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-4 group">
@@ -47,7 +47,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4 text-center md:text-left">
           <p className="text-xs text-[#6d6354] italic" style={{ fontFamily: "'Lora', serif" }}>
             © {new Date().getFullYear()} The Old Trading Post. "Patience is the farmer's greatest tool."
           </p>

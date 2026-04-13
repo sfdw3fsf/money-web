@@ -177,10 +177,10 @@ export default function CandleChart({ candles, activeSignal, currentPrice }: Can
   }, [activeSignal]);
 
   return (
-    <div className="relative w-full h-full min-h-[400px] rounded-xl overflow-hidden bg-[#231f18]/40 border border-[#c4956a]/10">
+    <div className="relative w-full h-full min-h-[300px] sm:min-h-[400px] rounded-xl overflow-hidden bg-[#231f18]/40 border border-[#c4956a]/10">
       {/* Price header overlay */}
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-3">
-        <span className="text-2xl font-bold text-[#e8dcc8] tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+      <div className="absolute top-2 left-3 sm:top-4 sm:left-4 z-10 flex items-center gap-2 sm:gap-3 pointer-events-none">
+        <span className="text-base sm:text-2xl font-bold text-[#e8dcc8] tabular-nums drop-shadow" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
           ${fmtPrice(currentPrice)}
         </span>
       </div>

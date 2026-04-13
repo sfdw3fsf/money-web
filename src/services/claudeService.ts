@@ -93,6 +93,38 @@ interface AIResponse {
   reasoning: string;
 }
 
+// Repair a truncated / malformed JSON object: close open strings, strip trailing
+// commas, and balance braces/brackets. Returns null if still unparseable.
+function repairJson(raw: string): AIResponse | null {
+  let s = raw.replace(/,\s*$/, '').replace(/,\s*([}\]])/g, '$1');
+
+  let inString = false;
+  let escape = false;
+  const stack: string[] = [];
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (escape) { escape = false; continue; }
+    if (ch === '\\') { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{' || ch === '[') stack.push(ch);
+    else if (ch === '}' && stack[stack.length - 1] === '{') stack.pop();
+    else if (ch === ']' && stack[stack.length - 1] === '[') stack.pop();
+  }
+  if (inString) s += '"';
+  s = s.replace(/,\s*$/, '');
+  while (stack.length) {
+    const open = stack.pop();
+    s += open === '{' ? '}' : ']';
+  }
+
+  try {
+    return JSON.parse(s) as AIResponse;
+  } catch {
+    return null;
+  }
+}
+
 // ========== Provider Detection ==========
 
 function isOpenAIKey(key: string): boolean {
@@ -224,8 +256,9 @@ async function callGemini(apiKey: string, prompt: string): Promise<string> {
     systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
     generationConfig: {
       temperature: 0.3,
-      maxOutputTokens: 2048,
+      maxOutputTokens: 8192,
       responseMimeType: 'application/json',
+      thinkingConfig: { thinkingBudget: 0 },
     },
   });
 
@@ -279,35 +312,27 @@ export async function analyzeCandles(
     ? await callOpenAI(apiKey, prompt)
     : await callGemini(apiKey, prompt);
 
-  // Parse JSON from response
-  const jsonMatch = content.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
+  // Parse JSON from response — find start brace, then try full or repaired parse
+  const startIdx = content.indexOf('{');
+  if (startIdx === -1) {
     throw new Error(`Failed to parse AI response as JSON. Raw: ${content.slice(0, 300)}`);
   }
+  const rawJson = content.slice(startIdx);
 
   let parsed: AIResponse;
   try {
-    parsed = JSON.parse(jsonMatch[0]);
-  } catch (parseError) {
-    console.warn(`[Analysis] JSON parse failed, attempting repair. Raw: ${content.slice(0, 150)}...`);
-    try {
-      // Basic repair: strip trailing commas, add closing brace
-      let clean = jsonMatch[0].replace(/,\s*$/, '').replace(/,\s*\}/g, '}');
-      if (!clean.endsWith('}')) clean += '}';
-      parsed = JSON.parse(clean);
-    } catch (repairError) {
-      console.error('[Analysis] JSON repair failed', repairError);
-      // Fallback to WAIT instead of crashing
-      parsed = {
-        signal: 'WAIT',
-        entry: 0,
-        takeProfit: 0,
-        stopLoss: 0,
-        confidence: 0,
-        riskReward: '0',
-        reasoning: 'AI returned invalid data format'
-      };
-    }
+    parsed = JSON.parse(rawJson);
+  } catch {
+    console.warn(`[Analysis] JSON parse failed, attempting repair. Raw: ${content.slice(0, 200)}...`);
+    parsed = repairJson(rawJson) ?? {
+      signal: 'WAIT',
+      entry: 0,
+      takeProfit: 0,
+      stopLoss: 0,
+      confidence: 0,
+      riskReward: '0',
+      reasoning: 'AI returned invalid data format',
+    };
   }
 
   // Ensure all required fields exist

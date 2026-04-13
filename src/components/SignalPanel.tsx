@@ -4,6 +4,7 @@ interface SignalPanelProps {
   signal: Signal | null;
   isAnalyzing: boolean;
   lastError: string | null;
+  lastFilterReason?: string | null;
   onManualAnalyze: () => void;
   onSendTelegram: () => void;
 }
@@ -12,12 +13,13 @@ export default function SignalPanel({
   signal,
   isAnalyzing,
   lastError,
+  lastFilterReason,
   onManualAnalyze,
   onSendTelegram,
 }: SignalPanelProps) {
   if (isAnalyzing) {
     return (
-      <div className="rounded-xl bg-[#231f18]/60 border border-[#c4956a]/10 p-6">
+      <div className="rounded-xl bg-[#231f18]/60 border border-[#c4956a]/10 p-5 sm:p-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-lg bg-[#c4956a]/10 border border-[#c4956a]/20 flex items-center justify-center">
             <span className="text-lg animate-spin">⚙</span>
@@ -52,7 +54,7 @@ export default function SignalPanel({
 
   if (!signal) {
     return (
-      <div className="rounded-xl bg-[#231f18]/60 border border-[#c4956a]/10 p-6">
+      <div className="rounded-xl bg-[#231f18]/60 border border-[#c4956a]/10 p-5 sm:p-6">
         <div className="text-center py-6">
           <div className="w-14 h-14 rounded-xl bg-[#c4956a]/10 border border-[#c4956a]/15 flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">🌻</span>
@@ -83,6 +85,14 @@ export default function SignalPanel({
               style={{ fontFamily: "'Lora', serif" }}
             >
               {lastError}
+            </p>
+          )}
+          {!lastError && lastFilterReason && (
+            <p
+              className="text-xs text-[#c4956a] mt-3 bg-[#c4956a]/10 rounded-lg px-3 py-2"
+              style={{ fontFamily: "'Lora', serif" }}
+            >
+              🛡️ Filtered: {lastFilterReason}
             </p>
           )}
         </div>
@@ -122,7 +132,7 @@ export default function SignalPanel({
 
   return (
     <div
-      className={`rounded-xl border p-6 transition-all duration-500 ${
+      className={`rounded-xl border p-5 sm:p-6 transition-all duration-500 ${
         isBuy
           ? "bg-[#7d9b6f]/[0.06] border-[#7d9b6f]/20"
           : isSell
@@ -216,11 +226,11 @@ export default function SignalPanel({
               Take Profit
             </span>
             <span
-              className="text-sm font-semibold text-[#7d9b6f] tabular-nums"
+              className="text-sm font-semibold text-[#7d9b6f] tabular-nums text-right"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
               ${signal.takeProfit.toFixed(2)}
-              <span className="ml-1 text-xs opacity-70">
+              <span className="ml-1 text-[10px] sm:text-xs opacity-70 whitespace-nowrap">
                 ({Number(tpPct) > 0 ? "+" : ""}
                 {tpPct}%)
               </span>
@@ -235,11 +245,11 @@ export default function SignalPanel({
               Stop Loss
             </span>
             <span
-              className="text-sm font-semibold text-[#b5594e] tabular-nums"
+              className="text-sm font-semibold text-[#b5594e] tabular-nums text-right"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
               ${signal.stopLoss.toFixed(2)}
-              <span className="ml-1 text-xs opacity-70">({slPct}%)</span>
+              <span className="ml-1 text-[10px] sm:text-xs opacity-70 whitespace-nowrap">({slPct}%)</span>
             </span>
           </div>
         </div>
